@@ -5,6 +5,7 @@ import 'package:todo_with_getx/view/form/view/todo_form_view.dart';
 
 import '../../../core/constants/todo_colors.dart';
 import '../../../core/enum/todo_enum.dart';
+import '../../../model/todo_model.dart';
 import '../viewmodel/home_viewmodel.dart';
 
 class HomeView extends StatelessWidget {
@@ -46,11 +47,23 @@ class HomeView extends StatelessWidget {
                 titleSpacing: 0,
                 title: _buildHeader(todaysTask, textTheme, context),
               ),
-              SliverList(delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return _buildTodosList(value1, textTheme, context);
-                },
-              ))
+              if (controller.isLoading.value)
+                const SliverToBoxAdapter(
+                    child: Center(
+                  child: CircularProgressIndicator(),
+                ))
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    childCount: controller.isLoading.value
+                        ? 0
+                        : controller.todos?.length,
+                    (context, index) {
+                      return _buildTodosList(
+                          controller.todos?[index], textTheme, context);
+                    },
+                  ),
+                )
             ],
           ),
         );
@@ -59,7 +72,7 @@ class HomeView extends StatelessWidget {
   }
 
   Padding _buildTodosList(
-      bool value1, TextTheme textTheme, BuildContext context) {
+      TodoModel? todoModel, TextTheme textTheme, BuildContext context) {
     return Padding(
       padding: context.horizontalMediumPadding,
       child: Card(
@@ -69,11 +82,11 @@ class HomeView extends StatelessWidget {
             children: [
               Checkbox(
                 checkColor: Colors.white,
-                value: value1,
+                value: todoModel?.isCompleted ?? false,
                 onChanged: (bool? newValue) {},
               ),
               Text(
-                "SDasdas asd sa dsa d",
+                todoModel?.title ?? "",
                 style: textTheme.bodyText1,
               ),
             ],

@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:todo_with_getx/core/cache/hive_manager.dart';
 import 'package:todo_with_getx/model/todo_categories_model.dart';
 import 'package:todo_with_getx/model/todo_model.dart';
+import 'package:todo_with_getx/view/form/view/add_category_dropdown_item.dart';
 
 class TodoFormViewmodel extends GetxController {
   @override
@@ -20,15 +22,19 @@ class TodoFormViewmodel extends GetxController {
   String? description;
   TodoCategories? category;
   RxBool isLoading = true.obs;
+  List<TodoCategories>? categories = <TodoCategories>[].obs;
+  List<DropdownMenuItem>? menuItems = <DropdownMenuItem>[].obs;
 
   changeLoading([bool? loading]) {
     isLoading.value = loading ?? !isLoading.value;
   }
 
-  List<TodoCategories>? categories = <TodoCategories>[].obs;
   getCategories() {
+    changeLoading(true);
     categories = hiveManager.todoCategoryCacheManager
         .getValues(); //categories?.addAll();
+
+    changeLoading(false);
   }
 
   late HiveManager hiveManager;
@@ -48,7 +54,6 @@ class TodoFormViewmodel extends GetxController {
   }
 
   Future<void> addCategory(String? categoryName) async {
-    changeLoading(true);
     int? currentCategoryId =
         hiveManager.todoCategoryCacheManager.getValues()?.length;
 
@@ -57,7 +62,10 @@ class TodoFormViewmodel extends GetxController {
     print(model.categoryName);
     await hiveManager.todoCategoryCacheManager
         .putItem(model.id.toString(), model);
-    changeLoading(false);
+
+    categories?.add(model);
+
+    update();
   }
 
   getData() {

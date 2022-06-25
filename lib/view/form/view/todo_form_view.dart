@@ -85,26 +85,27 @@ class TodoFormView extends StatelessWidget {
       controller.description = value;
 
   DropdownButtonFormField _buildDropdownFormField(
-    TodoFormViewmodel controller,
-    BuildContext context,
-  ) {
-    var list = List.generate((controller.categories?.length ?? 0) + 1, (index) {
-      if (index < (controller.categories?.length ?? 0)) {
-        var e = controller.categories?[index];
-        return DropdownMenuItem(value: e, child: Text(e?.categoryName ?? ""));
-      } else {
-        return _buildCategoryAddDropDownMenuItem(controller, context);
-      }
-    });
-
+      TodoFormViewmodel controller, BuildContext context) {
+    _dropdownMenuItemGenerator(controller, context);
     return DropdownButtonFormField(
       onSaved: (value) => controller.category = value,
       value: (controller.categories == null || controller.categories!.isEmpty)
           ? null
           : controller.categories?.first,
-      items: list,
+      items: controller.menuItems,
       onChanged: changed,
     );
+  }
+
+  void _dropdownMenuItemGenerator(TodoFormViewmodel c, BuildContext context) {
+    c.menuItems = List.generate((c.categories?.length ?? 0) + 1, (index) {
+      if (index < (c.categories?.length ?? 0)) {
+        var e = c.categories?[index];
+        return DropdownMenuItem(value: e, child: Text(e?.categoryName ?? ""));
+      } else {
+        return _buildCategoryAddDropDownMenuItem(c, context);
+      }
+    });
   }
 
   DropdownMenuItem<String> _buildCategoryAddDropDownMenuItem(
@@ -114,40 +115,49 @@ class TodoFormView extends StatelessWidget {
         enabled: false,
         value: "action",
         child: TextButton.icon(
-            onPressed: () {
-              showDialog(
+            onPressed: () async {
+              await showDialog(
                   context: context,
-                  builder: (context) {
-                    return Dialog(
-                      child: SizedBox(
-                        height: 200,
-                        child: _buildCategoryAddForm(
-                            alertFormKey, context, controller),
-                      ),
-                    );
+                  builder: (c) {
+                    var dialogContext = c;
+                    return StatefulBuilder(builder: (context, setState) {
+                      return Dialog(
+                        child: SizedBox(
+                          height: 200,
+                          child: _buildCategoryAddForm(
+                            alertFormKey,
+                            context,
+                            controller,
+                          ),
+                        ),
+                      );
+                    });
                   });
             },
             icon: Icon(Icons.add_rounded),
             label: Text("Add")));
   }
 
-  Form _buildCategoryAddForm(GlobalKey<FormState> alertFormKey,
-      BuildContext context, TodoFormViewmodel controller) {
+  Form _buildCategoryAddForm(GlobalKey<FormState> alertFormKey, BuildContext c,
+      TodoFormViewmodel controller) {
     return Form(
         key: alertFormKey,
         child: Padding(
-          padding: context.allLowPadding,
+          padding: c.allLowPadding,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Text(
                 "Add Category",
-                style: context.textTheme.headline6,
+                style: c.textTheme.headline6,
               ),
               TextFormField(
-                onSaved: (String? newValue) {
-                  newValue != null ? controller.addCategory(newValue) : null;
+                onSaved: (String? newValue) async {
+                  newValue != null
+                      ? await controller.addCategory(newValue)
+                      : null;
+                  _dropdownMenuItemGenerator(controller, c);
                 },
               ),
               SizedBox(
