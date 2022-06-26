@@ -26,6 +26,15 @@ class TodoFormViewmodel extends GetxController {
   List<TodoCategories>? categories = <TodoCategories>[].obs;
   List<DropdownMenuItem>? menuItems = <DropdownMenuItem>[].obs;
 
+  TodoCategories? updateDrowdownValue() {
+    if ((categories == null || categories!.isEmpty)) {
+      category = null;
+    } else {
+      category = categories?.reversed.toList().first;
+    }
+    update();
+  }
+
   void changeLoading([bool? loading]) {
     isLoading.value = loading ?? !isLoading.value;
   }
@@ -33,7 +42,7 @@ class TodoFormViewmodel extends GetxController {
   Future<void> getCategories() async {
     changeLoading(true);
     var manager = await hiveManager.todoCategoryCacheManager;
-    categories = manager.getValues();
+    categories = manager.getValues()?.reversed.toList();
 
     changeLoading(false);
   }
@@ -55,6 +64,8 @@ class TodoFormViewmodel extends GetxController {
     );
     manager.putItem(todoNumber.toString(), model);
     changeLoading(false);
+    Get.snackbar("${(title ?? "").capitalize} added to TODO's",
+        "Category:  ${(category?.categoryName ?? "").capitalize}");
   }
 
   Future<void> addCategory(String? categoryName) async {
