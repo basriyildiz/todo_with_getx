@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:todo_with_getx/core/extension/padding_extension.dart';
+import 'package:todo_with_getx/model/todo_categories_model.dart';
 import 'package:todo_with_getx/view/form/view/todo_form_view.dart';
 
 import '../../../core/constants/todo_colors.dart';
-import '../../../core/enum/todo_enum.dart';
 import '../../../model/todo_model.dart';
+import '../../widget/appBar/custom_app_bar.dart';
 import '../viewmodel/home_viewmodel.dart';
 
 class HomeView extends StatelessWidget {
@@ -13,20 +14,20 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool? value1 = false;
     String welcomeText = "What's up, Olivia!";
-    String categories = "Categories";
     String todaysTask = "Today's tasks";
     var textTheme = Theme.of(context).textTheme;
+
     return GetBuilder<HomeViewModel>(
       init: HomeViewModel(),
       builder: (HomeViewModel controller) {
         return Scaffold(
           floatingActionButton: FloatingActionButton(
-            onPressed: () => Get.to(TodoFormView()),
+            onPressed: () => Get.delete<HomeViewModel>()
+                .then((value) => Get.to(() => TodoFormView())),
             child: const Icon(Icons.add_rounded),
           ),
-          appBar: _buildAppBar(),
+          appBar: buildAppBar(),
           body: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -37,62 +38,14 @@ class HomeView extends StatelessWidget {
                   ],
                 ),
               ),
-              SliverToBoxAdapter(
-                child: _buildCategoriesColumn(categories, textTheme, context),
-              ),
-              SliverAppBar(
-                pinned: true,
-                backgroundColor: ColorConstants.lightBlue,
-                elevation: 10,
-                titleSpacing: 0,
-                title: _buildHeader(todaysTask, textTheme, context),
-              ),
-              if (controller.isLoading.value)
-                const SliverToBoxAdapter(
-                    child: Center(
-                  child: CircularProgressIndicator(),
-                ))
-              else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    childCount: controller.isLoading.value
-                        ? 0
-                        : controller.todos?.length,
-                    (context, index) {
-                      return _buildTodosList(
-                          controller.todos?[index], textTheme, context);
-                    },
-                  ),
-                )
+              buildLoading(
+                  controller, _categoriesColumnSliver(controller, context)),
+              _sliverAppBar(todaysTask, context),
+              buildLoading(controller, _todayTasksSliver(controller, context))
             ],
           ),
         );
       },
-    );
-  }
-
-  Padding _buildTodosList(
-      TodoModel? todoModel, TextTheme textTheme, BuildContext context) {
-    return Padding(
-      padding: context.horizontalMediumPadding,
-      child: Card(
-        child: Padding(
-          padding: context.allVeryLowPadding,
-          child: Row(
-            children: [
-              Checkbox(
-                checkColor: Colors.white,
-                value: todoModel?.isCompleted ?? false,
-                onChanged: (bool? newValue) {},
-              ),
-              Text(
-                todoModel?.title ?? "",
-                style: textTheme.bodyText1,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -107,24 +60,89 @@ class HomeView extends StatelessWidget {
     );
   }
 
+  SliverToBoxAdapter _categoriesColumnSliver(
+      HomeViewModel controller, BuildContext context) {
+    return SliverToBoxAdapter(
+      child: _buildCategoriesColumn(controller, context),
+    );
+  }
+
+  SliverAppBar _sliverAppBar(String todaysTask, BuildContext context) {
+    return SliverAppBar(
+      automaticallyImplyLeading: false,
+      pinned: true,
+      backgroundColor: ColorConstants.lightBlue,
+      elevation: 10,
+      titleSpacing: 0,
+      title: _buildHeader(todaysTask, context),
+    );
+  }
+
+  SliverList _todayTasksSliver(HomeViewModel controller, BuildContext context) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        childCount: controller.isLoading.value ? 0 : controller.todos?.length,
+        (context, index) {
+          return _buildTodosList(controller.todos?.reversed.toList()[index],
+              context.textTheme, context, controller);
+        },
+      ),
+    );
+  }
+
+  Padding _buildTodosList(TodoModel? todoModel, TextTheme textTheme,
+      BuildContext context, HomeViewModel controller) {
+    Color color = ColorConstants
+        .categoryColors[todoModel?.todoCategories?.categoryColorId ?? 0];
+
+    return Padding(
+      padding: context.horizontalMediumPadding,
+      child: Card(
+        child: Padding(
+          padding: context.allVeryLowPadding,
+          child: Row(
+            children: [
+              Checkbox(
+                checkColor: Colors.white,
+                fillColor: MaterialStateProperty.resolveWith(
+                    (states) => getColor(states, color, context)),
+                value: todoModel?.isCompleted ?? false,
+                onChanged: (bool? newValue) {
+                  todoModel?.isCompleted = newValue;
+                  print(todoModel?.id);
+                  controller.updateTodos();
+                },
+              ),
+              Text(
+                todoModel?.title ?? "",
+                style: textTheme.bodyText1,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Column _buildCategoriesColumn(
-      String categories, TextTheme textTheme, BuildContext context) {
-    //TODO buraya sonra gel hive ile çektiğin veriye göre çek ve kategorileri oluştur
+      HomeViewModel controller, BuildContext context) {
+    String categories = "Categories";
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(categories, textTheme, context),
+        _buildHeader(categories, context),
         SizedBox(
-          height: 0,
+          height: 100,
           child: ListView.builder(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 30),
             scrollDirection: Axis.horizontal,
-            itemCount: 2,
+            itemCount: controller.categories?.length ?? 0,
             itemBuilder: (BuildContext context, int index) {
               return SizedBox(
                 width: 200,
-                child: _buildCategoriesCard(textTheme),
+                child: _buildCategoriesCard(
+                    controller.categories?[index], context, controller),
               );
             },
           ),
@@ -133,19 +151,19 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Padding _buildHeader(
-      String title, TextTheme textTheme, BuildContext context) {
+  Padding _buildHeader(String title, BuildContext context) {
     return Padding(
       padding: context.horizontalMediumPadding + context.verticalLowPadding,
       child: Text(
         title.toUpperCase(),
-        style: textTheme.headline5,
+        style: context.textTheme.headline5,
       ),
     );
   }
 
-  Card _buildCategoriesCard(TextTheme textTheme) {
-    //  TODO buraya gel yorum text altını dzenle
+  Card _buildCategoriesCard(TodoCategories? category, BuildContext context,
+      HomeViewModel controller) {
+    int? taskNumber = controller.getTodosByCategory(category?.id)?.length;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -154,23 +172,24 @@ class HomeView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Text(
-              "40 tasks",
-              style: textTheme.bodySmall?.copyWith(
+              "${taskNumber == null ? "0" : taskNumber.toString()} task",
+              style: context.textTheme.bodySmall?.copyWith(
                 color: ColorConstants.grey,
               ),
             ),
             Text(
-              " todoCategories.name.capitalize ",
-              style: textTheme.headline4,
+              (category?.categoryName)?.capitalize ?? "",
+              style: context.textTheme.headline4,
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             ClipRRect(
-              borderRadius: BorderRadius.all(const Radius.circular(50)),
-              child: Container(
+              borderRadius: const BorderRadius.all(Radius.circular(50)),
+              child: SizedBox(
                 height: 5,
                 child: LinearProgressIndicator(
                   backgroundColor: ColorConstants.darkGrey.withOpacity(.8),
-                  color: ColorConstants.pink,
+                  color: ColorConstants
+                      .categoryColors[category?.categoryColorId ?? 0],
                   value: .5,
                 ),
               ),
@@ -181,22 +200,32 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  AppBar _buildAppBar() {
-    return AppBar(
-      leading: IconButton(
-        onPressed: () {},
-        icon: const Icon(Icons.menu_rounded),
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.search_rounded),
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.notifications_none_rounded),
-        ),
-      ],
+  Obx buildLoading(HomeViewModel controller, var sliverWidget) {
+    return Obx(
+      () {
+        if (controller.isLoading.value) {
+          return const SliverToBoxAdapter(
+              child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(5.0),
+              child: CircularProgressIndicator(),
+            ),
+          ));
+        } else {
+          return sliverWidget;
+        }
+      },
     );
+  }
+
+  Color getColor(
+      Set<MaterialState> states, Color? modelColor, BuildContext context) {
+    const Set<MaterialState> interactiveStates = <MaterialState>{
+      //  State'lere göre fill color burdan değiştirebilirsin
+    };
+    if (states.any(interactiveStates.contains)) {
+      return modelColor ?? ColorConstants.pink;
+    }
+    return modelColor ?? ColorConstants.pink;
   }
 }

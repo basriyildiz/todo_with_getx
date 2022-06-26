@@ -8,6 +8,8 @@ import 'package:todo_with_getx/core/enum/todo_enum.dart';
 import 'package:todo_with_getx/core/extension/padding_extension.dart';
 import 'package:todo_with_getx/model/todo_categories_model.dart';
 import 'package:todo_with_getx/view/form/viewmodel/todo_form_viewmodel.dart';
+import 'package:todo_with_getx/view/home/view/home_view.dart';
+import 'package:todo_with_getx/view/home/viewmodel/home_viewmodel.dart';
 
 class TodoFormView extends StatelessWidget {
   TodoFormView({Key? key}) : super(key: key);
@@ -26,6 +28,11 @@ class TodoFormView extends StatelessWidget {
           appBar: AppBar(
             title: Text(appBarTitle),
             centerTitle: true,
+            leading: IconButton(
+                onPressed: () {
+                  Get.to(() => HomeView());
+                },
+                icon: const Icon(Icons.arrow_back_ios)),
           ),
           body: SizedBox(
             child: Form(

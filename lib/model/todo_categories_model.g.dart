@@ -17,19 +17,22 @@ class TodoCategoriesAdapter extends TypeAdapter<TodoCategories> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return TodoCategories(
-      fields[1] as int?,
-      fields[2] as String?,
+      id: fields[1] as int?,
+      categoryName: fields[2] as String?,
+      categoryColorId: fields[3] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TodoCategories obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(1)
       ..write(obj.id)
       ..writeByte(2)
-      ..write(obj.categoryName);
+      ..write(obj.categoryName)
+      ..writeByte(3)
+      ..write(obj.categoryColorId);
   }
 
   @override

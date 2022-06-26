@@ -77,6 +77,13 @@ class TodoCacheManager extends ICacheManager<TodoModel> {
   List<TodoModel>? getValues() {
     return _box?.values.toList();
   }
+
+  List<TodoModel>? getValuesByCategory(int? categoryId) {
+    return _box?.values
+        .toList()
+        .where((TodoModel element) => element.todoCategories?.id == categoryId)
+        .toList();
+  }
 }
 
 class TodoCategoryCacheManager extends ICacheManager<TodoCategories> {
