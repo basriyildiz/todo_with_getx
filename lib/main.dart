@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'TODO',
       theme: buildThemeData(),
-      home: const HomeView(),
+      home:  HomeView(),
     );
   }
 }

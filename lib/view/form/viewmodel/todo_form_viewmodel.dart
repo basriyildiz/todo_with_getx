@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:todo_with_getx/core/cache/hive_manager.dart';
+import 'package:todo_with_getx/core/constants/todo_colors.dart';
 import 'package:todo_with_getx/model/todo_categories_model.dart';
 import 'package:todo_with_getx/model/todo_model.dart';
 import 'package:todo_with_getx/view/form/view/add_category_dropdown_item.dart';
@@ -25,14 +26,14 @@ class TodoFormViewmodel extends GetxController {
   List<TodoCategories>? categories = <TodoCategories>[].obs;
   List<DropdownMenuItem>? menuItems = <DropdownMenuItem>[].obs;
 
-  changeLoading([bool? loading]) {
+  void changeLoading([bool? loading]) {
     isLoading.value = loading ?? !isLoading.value;
   }
 
-  getCategories() {
+  Future<void> getCategories() async {
     changeLoading(true);
-    categories = hiveManager.todoCategoryCacheManager
-        .getValues(); //categories?.addAll();
+    var manager = await hiveManager.todoCategoryCacheManager;
+    categories = manager.getValues();
 
     changeLoading(false);
   }
@@ -41,38 +42,38 @@ class TodoFormViewmodel extends GetxController {
 
   Future<void> addTodo() async {
     changeLoading(true);
+    var manager = hiveManager.todoModelCacheManager;
+    int? todoNumber = manager.getValues()?.length;
+    todoNumber != null ? todoNumber++ : 1;
     TodoModel model = TodoModel(
+      id: todoNumber,
       title: title,
       description: description,
       dataTime: DateTime.now(),
       todoCategories: category,
       isCompleted: false,
     );
-
-    await hiveManager.todoModelCacheManager.addItem(model);
+    manager.putItem(todoNumber.toString(), model);
     changeLoading(false);
   }
 
   Future<void> addCategory(String? categoryName) async {
-    int? currentCategoryId =
-        hiveManager.todoCategoryCacheManager.getValues()?.length;
+    var manager = hiveManager.todoCategoryCacheManager;
+    int? currentCategoryId = manager.getValues()?.length;
+
+    int? id = currentCategoryId != null ? currentCategoryId++ : 1;
 
     TodoCategories model = TodoCategories(
-        currentCategoryId != null ? currentCategoryId++ : 1, categoryName);
-    print(model.categoryName);
-    await hiveManager.todoCategoryCacheManager
-        .putItem(model.id.toString(), model);
+        id: id,
+        categoryName: categoryName,
+        categoryColorId: id % (ColorConstants.categoryColors.length - 1));
+
+    await manager.putItem(model.id.toString(), model);
 
     categories?.add(model);
 
     update();
   }
 
-  getData() {
-    List<TodoCategories>? todoModels =
-        hiveManager.todoCategoryCacheManager.getValues();
-    for (var i = 0; i < ((todoModels?.length) ?? 0).toInt(); i++) {
-      print(todoModels?[i].categoryName);
-    }
-  }
+  getData() {}
 }

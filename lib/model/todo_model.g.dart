@@ -17,18 +17,19 @@ class TodoModelAdapter extends TypeAdapter<TodoModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return TodoModel(
+      id: fields[6] as int?,
       title: fields[1] as String?,
       description: fields[2] as String?,
       dataTime: fields[3] as DateTime?,
       todoCategories: fields[4] as TodoCategories?,
-      isCompleted: fields[5] as bool,
+      isCompleted: fields[5] as bool?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TodoModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(1)
       ..write(obj.title)
       ..writeByte(2)
@@ -38,7 +39,9 @@ class TodoModelAdapter extends TypeAdapter<TodoModel> {
       ..writeByte(4)
       ..write(obj.todoCategories)
       ..writeByte(5)
-      ..write(obj.isCompleted);
+      ..write(obj.isCompleted)
+      ..writeByte(6)
+      ..write(obj.id);
   }
 
   @override

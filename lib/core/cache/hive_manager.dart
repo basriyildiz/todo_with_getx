@@ -11,18 +11,27 @@ class HiveManager extends GetxController {
   }
 
   Future<void> hiveInits() async {
-    todoCategoryCacheManager = TodoCategoryCacheManager();
-    await todoCategoryCacheManager.init();
-    todoModelCacheManager = TodoCacheManager();
-    await todoModelCacheManager.init();
+    _todoCategoryCacheManager = TodoCategoryCacheManager();
+    await _todoCategoryCacheManager.init();
+    _todoModelCacheManager = TodoCacheManager();
+    await _todoModelCacheManager.init();
   }
 
-  late ICacheManager<TodoModel> todoModelCacheManager;
+  late TodoCacheManager _todoModelCacheManager;
 
-  late ICacheManager<TodoCategories> todoCategoryCacheManager;
+  late TodoCategoryCacheManager _todoCategoryCacheManager;
+
+  TodoCacheManager get todoModelCacheManager {
+    
+    return _todoModelCacheManager;
+  }
+
+  TodoCategoryCacheManager get todoCategoryCacheManager {
+    return _todoCategoryCacheManager;
+  }
 
   Future<void> clearAllHiveDatabae() async {
-    await todoModelCacheManager.clearAll();
-    await todoCategoryCacheManager.clearAll();
+    await _todoModelCacheManager.clearAll();
+    await _todoCategoryCacheManager.clearAll();
   }
 }

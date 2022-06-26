@@ -10,7 +10,7 @@ ThemeData buildThemeData() {
     appBarTheme: _buildAppBar(),
     cardTheme: _buildCardTheme(),
     textTheme: buildTextTheme(),
-    inputDecorationTheme: InputDecorationTheme(
+    inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(),
       filled: true,
       fillColor: Colors.white70,
@@ -18,7 +18,10 @@ ThemeData buildThemeData() {
         borderSide: BorderSide(color: ColorConstants.pink),
       ),
     ),
-    checkboxTheme: const CheckboxThemeData(shape: CircleBorder()),
+    checkboxTheme: CheckboxThemeData(
+        shape: CircleBorder(),
+        fillColor:
+            MaterialStateProperty.resolveWith((states) => getColor(states))),
     primaryColor: ColorConstants.grey,
     scaffoldBackgroundColor: ColorConstants.lightBlue,
   );
@@ -42,4 +45,16 @@ CardTheme _buildCardTheme() {
     elevation: 8,
     shadowColor: ColorConstants.primaryColor,
   );
+}
+
+Color getColor(Set<MaterialState> states) {
+  const Set<MaterialState> interactiveStates = <MaterialState>{
+    MaterialState.pressed,
+    MaterialState.hovered,
+    MaterialState.focused,
+  };
+  if (states.any(interactiveStates.contains)) {
+    return Colors.blue;
+  }
+  return Colors.red;
 }

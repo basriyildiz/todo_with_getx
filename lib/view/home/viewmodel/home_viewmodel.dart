@@ -10,8 +10,9 @@ class HomeViewModel extends GetxController {
   void onInit() {
     // TODO: implement onInit
     super.onInit();
+    changeLoading(true);
     hiveManager = Get.find<HiveManager>();
-    hiveManager.hiveInits().then((value) {
+    hiveManager.hiveInits().then((value) async {
       getCategories();
       getTodos();
       changeLoading(false);
@@ -28,12 +29,31 @@ class HomeViewModel extends GetxController {
   }
 
   void getTodos() {
-    todos = hiveManager.todoModelCacheManager.getValues();
+    var manager = hiveManager.todoModelCacheManager;
+    todos = manager.getValues();
+
     update();
   }
 
+  List<TodoModel>? getTodosByCategory(categoryId) {
+    var manager = hiveManager.todoModelCacheManager;
+    return manager.getValuesByCategory(categoryId);
+  }
+
   void getCategories() {
-    categories = hiveManager.todoCategoryCacheManager.getValues();
+    var manager = hiveManager.todoCategoryCacheManager;
+    categories = manager.getValues();
+
+    update();
+  }
+
+  void updateTodos() {
+    var manager = hiveManager.todoModelCacheManager;
+
+    if (todos != null || todos!.isNotEmpty) {
+      manager.clearAllThenInit().then((value) => manager.putItems(todos!));
+      print("çall");
+    }
     update();
   }
 }
