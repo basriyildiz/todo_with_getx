@@ -1,41 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:todo_with_getx/core/extension/padding_extension.dart';
+import 'package:todo_with_getx/view/home/viewmodel/home_viewmodel.dart';
 
 import '../viewmodel/todo_form_viewmodel.dart';
 
 DropdownMenuItem<String> buildCategoryAddDropDownMenuItem(
-    TodoFormViewmodel controller, BuildContext context) {
+    TodoFormViewmodel? controller, BuildContext context) {
   final alertFormKey = GlobalKey<FormState>();
   return DropdownMenuItem(
       enabled: false,
       value: "action",
       child: TextButton.icon(
           onPressed: () async {
+            Get.back();
             await showDialog(
                 context: context,
-                builder: (c) {
-                  var dialogContext = c;
-                  return StatefulBuilder(builder: (context, setState) {
-                    return Dialog(
-                      child: SizedBox(
-                        height: 200,
-                        child: _buildCategoryAddForm(
-                          alertFormKey,
-                          context,
-                          controller,
-                        ),
+                builder: (BuildContext context) {
+                  BuildContext dialogContext = context;
+                  return Dialog(
+                    child: SizedBox(
+                      height: 200,
+                      child: _buildCategoryAddForm(
+                        alertFormKey,
+                        dialogContext,
+                        controller,
                       ),
-                    );
-                  });
-                });
+                    ),
+                  );
+                }).then((value) {
+              Get.snackbar(
+                  "Category Added",
+                  "${controller?.category?.categoryName ?? ""} added to categories");
+              /*      Get.showSnackbar(
+                GetSnackBar(
+                  snackPosition: SnackPosition.TOP,
+                  duration: Duration(seconds: 2),
+                  backgroundColor: Colors.black,
+                  title: "Category Added",
+                  messageText: Text(
+                    controller?.category?.categoryName ?? "",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ); */
+            });
           },
           icon: Icon(Icons.add_rounded),
           label: Text("Add")));
 }
 
 Form _buildCategoryAddForm(GlobalKey<FormState> alertFormKey, BuildContext c,
-    TodoFormViewmodel controller) {
+    TodoFormViewmodel? controller) {
+  controller ??= Get.find<TodoFormViewmodel>();
   return Form(
       key: alertFormKey,
       child: Padding(
@@ -51,8 +68,12 @@ Form _buildCategoryAddForm(GlobalKey<FormState> alertFormKey, BuildContext c,
             TextFormField(
               onSaved: (String? newValue) async {
                 newValue != null
-                    ? await controller.addCategory(newValue)
+                    ? await controller?.addCategory(newValue)
                     : null;
+                controller?.updateDrowdownValue();
+                Get.back();
+
+                // Get.back();
               },
             ),
             SizedBox(

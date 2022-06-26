@@ -7,6 +7,7 @@ import 'package:todo_with_getx/core/constants/todo_colors.dart';
 import 'package:todo_with_getx/core/enum/todo_enum.dart';
 import 'package:todo_with_getx/core/extension/padding_extension.dart';
 import 'package:todo_with_getx/model/todo_categories_model.dart';
+import 'package:todo_with_getx/view/form/view/add_category_dropdown_item.dart';
 import 'package:todo_with_getx/view/form/viewmodel/todo_form_viewmodel.dart';
 import 'package:todo_with_getx/view/home/view/home_view.dart';
 import 'package:todo_with_getx/view/home/viewmodel/home_viewmodel.dart';
@@ -96,9 +97,7 @@ class TodoFormView extends StatelessWidget {
     _dropdownMenuItemGenerator(controller, context);
     return DropdownButtonFormField(
       onSaved: (value) => controller.category = value,
-      value: (controller.categories == null || controller.categories!.isEmpty)
-          ? null
-          : controller.categories?.first,
+      value: controller.category,
       items: controller.menuItems,
       onChanged: changed,
     );
@@ -110,79 +109,9 @@ class TodoFormView extends StatelessWidget {
         var e = c.categories?[index];
         return DropdownMenuItem(value: e, child: Text(e?.categoryName ?? ""));
       } else {
-        return _buildCategoryAddDropDownMenuItem(c, context);
+        return buildCategoryAddDropDownMenuItem(c, context);
       }
     });
-  }
-
-  DropdownMenuItem<String> _buildCategoryAddDropDownMenuItem(
-      TodoFormViewmodel controller, BuildContext context) {
-    final alertFormKey = GlobalKey<FormState>();
-    return DropdownMenuItem(
-        enabled: false,
-        value: "action",
-        child: TextButton.icon(
-            onPressed: () async {
-              await showDialog(
-                  context: context,
-                  builder: (c) {
-                    var dialogContext = c;
-                    return StatefulBuilder(builder: (context, setState) {
-                      return Dialog(
-                        child: SizedBox(
-                          height: 200,
-                          child: _buildCategoryAddForm(
-                            alertFormKey,
-                            context,
-                            controller,
-                          ),
-                        ),
-                      );
-                    });
-                  });
-            },
-            icon: Icon(Icons.add_rounded),
-            label: Text("Add")));
-  }
-
-  Form _buildCategoryAddForm(GlobalKey<FormState> alertFormKey, BuildContext c,
-      TodoFormViewmodel controller) {
-    return Form(
-        key: alertFormKey,
-        child: Padding(
-          padding: c.allLowPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Text(
-                "Add Category",
-                style: c.textTheme.headline6,
-              ),
-              TextFormField(
-                onSaved: (String? newValue) async {
-                  newValue != null
-                      ? await controller.addCategory(newValue)
-                      : null;
-                  _dropdownMenuItemGenerator(controller, c);
-                },
-              ),
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (alertFormKey.currentState != null) {
-                      if (alertFormKey.currentState?.validate() == true) {
-                        alertFormKey.currentState?.save();
-                      }
-                    }
-                  },
-                  child: Text("Add"),
-                ),
-              ),
-            ],
-          ),
-        ));
   }
 
   SizedBox _buildSaveButton(TodoFormViewmodel controller) {
@@ -190,12 +119,13 @@ class TodoFormView extends StatelessWidget {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: () {
+        onPressed: () async {
           if (_formKey.currentState != null) {
             if (_formKey.currentState?.validate() == true) {
               _formKey.currentState?.save();
+              await controller.addTodo();
+              _formKey.currentState?.reset();
             }
-            controller.addTodo();
           }
         },
         child: Text(saved),
