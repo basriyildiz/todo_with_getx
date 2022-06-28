@@ -1,13 +1,10 @@
-import 'package:flutter/animation.dart';
 import 'package:get/get.dart';
-import 'package:todo_with_getx/core/cache/hive_manager.dart';
-import 'package:todo_with_getx/model/todo_categories_model.dart';
-import 'package:todo_with_getx/model/todo_model.dart';
 
-import '../../../core/enum/todo_enum.dart';
+import '../../core/cache/hive_manager.dart';
+import '../../model/todo_categories_model.dart';
+import '../../model/todo_model.dart';
 
-class HomeViewModel extends GetxController
-    with GetSingleTickerProviderStateMixin {
+class CoreViewmodel extends GetxController {
   @override
   void onInit() {
     // TODO: implement onInit
@@ -24,9 +21,7 @@ class HomeViewModel extends GetxController
   var isLoading = true.obs;
   late HiveManager hiveManager;
   List<TodoModel>? todos = <TodoModel>[].obs;
-  List<TodoModel>? categoryTodos = <TodoModel>[].obs;
   List<TodoCategories>? categories = <TodoCategories>[].obs;
-  double? value = .0;
 
   void changeLoading([bool? loading]) {
     isLoading.value = loading ?? !isLoading.value;
@@ -39,15 +34,9 @@ class HomeViewModel extends GetxController
     update();
   }
 
-  Future<void> removeTodo(int? todoID) async {
+  removeTodo(int? todoID) {
     var manager = hiveManager.todoModelCacheManager;
-
-    print("todoID: $todoID");
-    await manager.removeItem(todoID.toString());
-
-    todos?.removeWhere((element) => element.id == todoID);
-    categoryTodos?.removeWhere((element) => element.id == todoID);
-    update();
+    manager.removeItem(todoID.toString());
   }
 
   List<TodoModel>? getTodosByCategory(categoryId) {
@@ -55,22 +44,19 @@ class HomeViewModel extends GetxController
     return manager.getValuesByCategory(categoryId);
   }
 
-  void getCategories() {
+  List<TodoCategories>? getCategories() {
     var manager = hiveManager.todoCategoryCacheManager;
-    categories = manager.getValues();
-
-    update();
+    return manager.getValues();
   }
 
   void updateTodos() {
     var manager = hiveManager.todoModelCacheManager;
 
-    if (todos != null) {
-      if (todos!.isNotEmpty) {
-        manager
-            .clearAllThenInit()
-            .then((value) async => await manager.putItems(todos!));
-      }
+    if (todos != null || todos!.isNotEmpty) {
+      manager
+          .clearAllThenInit()
+          .then((value) async => await manager.putItems(todos!));
+      print("updated");
     }
     update();
   }

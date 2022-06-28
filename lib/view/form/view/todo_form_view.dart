@@ -13,12 +13,14 @@ import 'package:todo_with_getx/view/home/view/home_view.dart';
 import 'package:todo_with_getx/view/home/viewmodel/home_viewmodel.dart';
 
 class TodoFormView extends StatelessWidget {
-  TodoFormView({Key? key}) : super(key: key);
+  TodoFormView({Key? key, required this.page}) : super(key: key);
   final _formKey = GlobalKey<FormState>();
   final title = "Title";
   final description = "Description";
   final saved = "Save Data";
   final appBarTitle = "Add Todo";
+
+  final Widget page;
   @override
   Widget build(BuildContext context) {
     return GetBuilder<TodoFormViewmodel>(
@@ -31,7 +33,7 @@ class TodoFormView extends StatelessWidget {
             centerTitle: true,
             leading: IconButton(
                 onPressed: () {
-                  Get.to(() => HomeView());
+                  Get.to(() => page);
                 },
                 icon: const Icon(Icons.arrow_back_ios)),
           ),

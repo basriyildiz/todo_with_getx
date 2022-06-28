@@ -21,12 +21,12 @@ abstract class ICacheManager<T> {
   Future<void> addItem(T item);
   Future<void> putItem(String key, T item);
   Future<void> putItems(List<T> items);
-  T? getItem(String key);
+  T? getItem(String itemKey);
   List<T>? getValues();
   void registerAdapters();
 
-  Future<void> removeItem() async {
-    await _box?.delete(key);
+  Future<void> removeItem(String itemKey) async {
+    await _box?.delete(itemKey);
   }
 
   Future<void> clearAll() async {
@@ -75,6 +75,7 @@ class TodoCacheManager extends ICacheManager<TodoModel> {
 
   @override
   List<TodoModel>? getValues() {
+    print(_box?.keys);
     return _box?.values.toList();
   }
 

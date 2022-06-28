@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:todo_with_getx/core/extension/padding_extension.dart';
 import 'package:todo_with_getx/model/todo_categories_model.dart';
+import 'package:todo_with_getx/view/category/view/category_view.dart';
+import 'package:todo_with_getx/view/category/viewmodel/category_viewmodel.dart';
 import 'package:todo_with_getx/view/form/view/todo_form_view.dart';
+import 'package:todo_with_getx/view/widget/todo_card.dart';
 
 import '../../../core/constants/todo_colors.dart';
 import '../../../model/todo_model.dart';
 import '../../widget/appBar/custom_app_bar.dart';
+import '../../widget/text_types.dart';
+import '../viewmodel/card_animation.dart';
 import '../viewmodel/home_viewmodel.dart';
 
 class HomeView extends StatelessWidget {
@@ -24,7 +29,9 @@ class HomeView extends StatelessWidget {
         return Scaffold(
           floatingActionButton: FloatingActionButton(
             onPressed: () => Get.delete<HomeViewModel>()
-                .then((value) => Get.to(() => TodoFormView())),
+                .then((value) => Get.to(() => TodoFormView(
+                      page: HomeView(),
+                    ))),
             child: const Icon(Icons.add_rounded),
           ),
           appBar: buildAppBar(),
@@ -74,7 +81,7 @@ class HomeView extends StatelessWidget {
       backgroundColor: ColorConstants.lightBlue,
       elevation: 10,
       titleSpacing: 0,
-      title: _buildHeader(todaysTask, context),
+      title: buildHeader(todaysTask, context),
     );
   }
 
@@ -83,88 +90,62 @@ class HomeView extends StatelessWidget {
       delegate: SliverChildBuilderDelegate(
         childCount: controller.isLoading.value ? 0 : controller.todos?.length,
         (context, index) {
-          return _buildTodosList(controller.todos?.reversed.toList()[index],
-              context.textTheme, context, controller);
+          return buildTodosCard(
+              controller.todos?.reversed.toList()[index], context);
         },
       ),
     );
   }
+}
 
-  Padding _buildTodosList(TodoModel? todoModel, TextTheme textTheme,
-      BuildContext context, HomeViewModel controller) {
-    Color color = ColorConstants
-        .categoryColors[todoModel?.todoCategories?.categoryColorId ?? 0];
+Column _buildCategoriesColumn(HomeViewModel controller, BuildContext context) {
+  String categories = "Categories";
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      buildHeader(categories, context),
+      SizedBox(
+        height: 100,
+        child: ListView.builder(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 30),
+          scrollDirection: Axis.horizontal,
+          itemCount: controller.categories?.length ?? 0,
+          itemBuilder: (BuildContext context, int index) {
+            TodoCategories? category = controller.categories?[index];
+            int? taskNumber =
+                controller.getTodosByCategory(category?.id)?.length;
 
-    return Padding(
-      padding: context.horizontalMediumPadding,
-      child: Card(
-        child: Padding(
-          padding: context.allVeryLowPadding,
-          child: Row(
-            children: [
-              Checkbox(
-                checkColor: Colors.white,
-                fillColor: MaterialStateProperty.resolveWith(
-                    (states) => getColor(states, color, context)),
-                value: todoModel?.isCompleted ?? false,
-                onChanged: (bool? newValue) {
-                  todoModel?.isCompleted = newValue;
-                  print(todoModel?.id);
-                  controller.updateTodos();
-                },
-              ),
-              Text(
-                todoModel?.title ?? "",
-                style: textTheme.bodyText1,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Column _buildCategoriesColumn(
-      HomeViewModel controller, BuildContext context) {
-    String categories = "Categories";
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildHeader(categories, context),
-        SizedBox(
-          height: 100,
-          child: ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            scrollDirection: Axis.horizontal,
-            itemCount: controller.categories?.length ?? 0,
-            itemBuilder: (BuildContext context, int index) {
-              return SizedBox(
+            return Visibility(
+              visible: taskNumber != null
+                  ? taskNumber > 0
+                      ? true
+                      : false
+                  : false,
+              child: SizedBox(
                 width: 200,
                 child: _buildCategoriesCard(
-                    controller.categories?[index], context, controller),
-              );
-            },
-          ),
-        )
-      ],
-    );
-  }
+                    category, context, controller, taskNumber),
+              ),
+            );
+          },
+        ),
+      )
+    ],
+  );
+}
 
-  Padding _buildHeader(String title, BuildContext context) {
-    return Padding(
-      padding: context.horizontalMediumPadding + context.verticalLowPadding,
-      child: Text(
-        title.toUpperCase(),
-        style: context.textTheme.headline5,
-      ),
-    );
-  }
+InkWell _buildCategoriesCard(TodoCategories? category, BuildContext context,
+    HomeViewModel controller, int? taskNumber) {
+  List<TodoModel>? categoryTodos = controller.getTodosByCategory(category?.id);
 
-  Card _buildCategoriesCard(TodoCategories? category, BuildContext context,
-      HomeViewModel controller) {
-    int? taskNumber = controller.getTodosByCategory(category?.id)?.length;
-    return Card(
+  double? value = _calculateCardStatus(categoryTodos);
+  return InkWell(
+    onTap: () {
+      controller.categoryTodos = categoryTodos;
+      Get.to(CategoryView(category: category), preventDuplicates: false);
+    },
+    child: Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -190,42 +171,46 @@ class HomeView extends StatelessWidget {
                   backgroundColor: ColorConstants.darkGrey.withOpacity(.8),
                   color: ColorConstants
                       .categoryColors[category?.categoryColorId ?? 0],
-                  value: .5,
+                  value: value ?? .5,
                 ),
               ),
             )
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Obx buildLoading(HomeViewModel controller, var sliverWidget) {
-    return Obx(
-      () {
-        if (controller.isLoading.value) {
-          return const SliverToBoxAdapter(
-              child: Center(
-            child: Padding(
-              padding: EdgeInsets.all(5.0),
-              child: CircularProgressIndicator(),
-            ),
-          ));
-        } else {
-          return sliverWidget;
-        }
-      },
-    );
+double? _calculateCardStatus(List<TodoModel>? categoryTodos) {
+  int? completedTodosLength = categoryTodos
+      ?.where((element) => element.isCompleted == true)
+      .toList()
+      .length;
+  double? answer;
+  try {
+    answer = completedTodosLength! / (categoryTodos?.length.toInt() ?? 0);
+  } catch (e) {
+    print("hata");
+    return answer;
   }
+  return answer;
+}
 
-  Color getColor(
-      Set<MaterialState> states, Color? modelColor, BuildContext context) {
-    const Set<MaterialState> interactiveStates = <MaterialState>{
-      //  State'lere göre fill color burdan değiştirebilirsin
-    };
-    if (states.any(interactiveStates.contains)) {
-      return modelColor ?? ColorConstants.pink;
-    }
-    return modelColor ?? ColorConstants.pink;
-  }
+Obx buildLoading(HomeViewModel controller, var sliverWidget) {
+  return Obx(
+    () {
+      if (controller.isLoading.value) {
+        return const SliverToBoxAdapter(
+            child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(5.0),
+            child: CircularProgressIndicator(),
+          ),
+        ));
+      } else {
+        return sliverWidget;
+      }
+    },
+  );
 }

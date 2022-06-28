@@ -5,7 +5,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo_with_getx/core/binding.dart';
 import 'package:todo_with_getx/view/home/view/home_view.dart';
 
-import 'core/cache/hive_manager.dart';
 import 'core/theme/theme_data.dart';
 
 Future<void> main() async {
@@ -26,13 +25,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return GetMaterialApp(
       initialBinding: Binding(),
       debugShowCheckedModeBanner: false,
       title: 'TODO',
       theme: buildThemeData(),
-      home:  HomeView(),
+      home: HomeView(),
     );
   }
 }

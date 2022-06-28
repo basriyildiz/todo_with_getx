@@ -52,17 +52,24 @@ class TodoFormViewmodel extends GetxController {
   Future<void> addTodo() async {
     changeLoading(true);
     var manager = hiveManager.todoModelCacheManager;
-    int? todoNumber = manager.getValues()?.length;
-    todoNumber != null ? todoNumber++ : 1;
+    List<TodoModel>? todos = manager.getValues();
+    int? todoID;
+    if (todos != null && todos.isNotEmpty) {
+      if (todos.last.id != null) {
+        todoID = todos.last.id;
+      }
+    }
+    todoID = todoID != null ? todoID + 1 : 1;
+    debugPrint("id eklendi: $todoID");
     TodoModel model = TodoModel(
-      id: todoNumber,
+      id: todoID,
       title: title,
       description: description,
       dataTime: DateTime.now(),
       todoCategories: category,
       isCompleted: false,
     );
-    manager.putItem(todoNumber.toString(), model);
+    manager.putItem(todoID.toString(), model);
     changeLoading(false);
     Get.snackbar("${(title ?? "").capitalize} added to TODO's",
         "Category:  ${(category?.categoryName ?? "").capitalize}");
