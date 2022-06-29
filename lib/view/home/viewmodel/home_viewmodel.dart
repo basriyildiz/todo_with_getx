@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:todo_with_getx/core/cache/hive_manager.dart';
 import 'package:todo_with_getx/model/todo_categories_model.dart';
 import 'package:todo_with_getx/model/todo_model.dart';
+import 'package:todo_with_getx/view/auth/login/view/login_view.dart';
 
 import '../../../core/enum/todo_enum.dart';
+import '../../../model/login_model.dart';
 
 class HomeViewModel extends GetxController
     with GetSingleTickerProviderStateMixin {
@@ -30,6 +32,17 @@ class HomeViewModel extends GetxController
 
   void changeLoading([bool? loading]) {
     isLoading.value = loading ?? !isLoading.value;
+  }
+
+  String? getUsername() {
+    List<LoginModel>? users = hiveManager.loginModelCacheManager.getValues();
+    if (users != null) {
+      if (users.isNotEmpty) {
+        return users.last.userName;
+      } else {
+        Get.to(LoginView());
+      }
+    }
   }
 
   void getTodos() {

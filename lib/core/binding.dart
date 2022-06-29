@@ -10,6 +10,8 @@ class Binding extends Bindings {
     Get.lazyPut(() => HiveManager());
     Get.lazyPut(() => HomeViewModel());
     Get.lazyPut(() => CardStatusAnimation());
+
+    
     /*  Get.lazyPut(() => HiveManager());
   Get.put(() => HiveManager()); */
   }

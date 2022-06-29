@@ -3,6 +3,8 @@ import 'package:todo_with_getx/core/constants/hive_constant.dart';
 import 'package:todo_with_getx/model/todo_categories_model.dart';
 import 'package:todo_with_getx/model/todo_model.dart';
 
+import '../../model/login_model.dart';
+
 abstract class ICacheManager<T> {
   final String key;
   Box<T>? _box;
@@ -75,8 +77,17 @@ class TodoCacheManager extends ICacheManager<TodoModel> {
 
   @override
   List<TodoModel>? getValues() {
+    List<TodoModel>? values = _box?.values.toList();
     print(_box?.keys);
-    return _box?.values.toList();
+    if (_box?.keys != null) {
+      if (_box?.keys.isNotEmpty == true) {
+        if (_box?.keys.first.toString() == "0") {
+          values?.removeAt(0);
+        }
+      }
+    }
+    print(values?.length);
+    return values;
   }
 
   List<TodoModel>? getValuesByCategory(int? categoryId) {
@@ -124,6 +135,47 @@ class TodoCategoryCacheManager extends ICacheManager<TodoCategories> {
 
   @override
   List<TodoCategories>? getValues() {
+    return _box?.values.toList();
+  }
+}
+
+class LoginModelCacheManager extends ICacheManager<LoginModel> {
+  LoginModelCacheManager() : super(HiveConstants.userModel.toString());
+
+  @override
+  void registerAdapters() {
+    if (!Hive.isAdapterRegistered(HiveConstants.userModel)) {
+      Hive.registerAdapter(LoginModelAdapter());
+    }
+  }
+
+  @override
+  Future<void> addItems(List<LoginModel> items) async {
+    await _box?.addAll(items);
+  }
+
+  @override
+  Future<void> addItem(LoginModel item) async {
+    await _box?.add(item);
+  }
+
+  @override
+  Future<void> putItem(String key, LoginModel item) async {
+    await _box?.put(key, item);
+  }
+
+  @override
+  Future<void> putItems(List<LoginModel> items) async {
+    await _box?.putAll(items.asMap());
+  }
+
+  @override
+  LoginModel? getItem(String key) {
+    return _box?.get(key);
+  }
+
+  @override
+  List<LoginModel>? getValues() {
     return _box?.values.toList();
   }
 }
