@@ -19,13 +19,14 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String welcomeText = "What's up, Olivia!";
     String todaysTask = "Today's tasks";
+
     var textTheme = Theme.of(context).textTheme;
 
     return GetBuilder<HomeViewModel>(
       init: HomeViewModel(),
       builder: (HomeViewModel controller) {
+        String? welcomeText = _welcomeTextGenerator(controller);
         return Scaffold(
           floatingActionButton: FloatingActionButton(
             onPressed: () => Get.delete<HomeViewModel>()
@@ -54,6 +55,10 @@ class HomeView extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _welcomeTextGenerator(HomeViewModel controller) {
+    return "What's up, ${(controller.getUsername() ?? "").capitalize!}!";
   }
 
   Padding _buildWelcomeHeader(

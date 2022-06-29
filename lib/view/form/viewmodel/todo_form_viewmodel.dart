@@ -71,8 +71,13 @@ class TodoFormViewmodel extends GetxController {
     );
     manager.putItem(todoID.toString(), model);
     changeLoading(false);
-    Get.snackbar("${(title ?? "").capitalize} added to TODO's",
-        "Category:  ${(category?.categoryName ?? "").capitalize}");
+    Get.snackbar(
+      "${(title ?? "").capitalize} added to TODO's",
+      "Category:  ${(category?.categoryName ?? "").capitalize}",
+      backgroundColor: ColorConstants.grey,
+      isDismissible: true,
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 
   Future<void> addCategory(String? categoryName) async {

@@ -15,14 +15,17 @@ class HiveManager extends GetxController {
     await _todoCategoryCacheManager.init();
     _todoModelCacheManager = TodoCacheManager();
     await _todoModelCacheManager.init();
+    _loginModelCacheManager = LoginModelCacheManager();
+    await _loginModelCacheManager.init();
   }
 
   late TodoCacheManager _todoModelCacheManager;
 
   late TodoCategoryCacheManager _todoCategoryCacheManager;
 
+  late LoginModelCacheManager _loginModelCacheManager;
+
   TodoCacheManager get todoModelCacheManager {
-    
     return _todoModelCacheManager;
   }
 
@@ -30,8 +33,13 @@ class HiveManager extends GetxController {
     return _todoCategoryCacheManager;
   }
 
+  LoginModelCacheManager get loginModelCacheManager {
+    return _loginModelCacheManager;
+  }
+
   Future<void> clearAllHiveDatabae() async {
-    await _todoModelCacheManager.clearAll();
-    await _todoCategoryCacheManager.clearAll();
+    await todoModelCacheManager.clearAll();
+    await todoCategoryCacheManager.clearAll();
+    await loginModelCacheManager.clearAll();
   }
 }

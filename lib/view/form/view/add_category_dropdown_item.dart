@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:todo_with_getx/core/constants/todo_colors.dart';
 import 'package:todo_with_getx/core/extension/padding_extension.dart';
 import 'package:todo_with_getx/view/home/viewmodel/home_viewmodel.dart';
 
@@ -30,20 +31,10 @@ DropdownMenuItem<String> buildCategoryAddDropDownMenuItem(
                   );
                 }).then((value) {
               Get.snackbar(
+                  backgroundColor: ColorConstants.grey,
+                  isDismissible: true,
                   "Category Added",
                   "${controller?.category?.categoryName ?? ""} added to categories");
-              /*      Get.showSnackbar(
-                GetSnackBar(
-                  snackPosition: SnackPosition.TOP,
-                  duration: Duration(seconds: 2),
-                  backgroundColor: Colors.black,
-                  title: "Category Added",
-                  messageText: Text(
-                    controller?.category?.categoryName ?? "",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ); */
             });
           },
           icon: Icon(Icons.add_rounded),
@@ -72,8 +63,6 @@ Form _buildCategoryAddForm(GlobalKey<FormState> alertFormKey, BuildContext c,
                     : null;
                 controller?.updateDrowdownValue();
                 Get.back();
-
-                // Get.back();
               },
             ),
             SizedBox(
